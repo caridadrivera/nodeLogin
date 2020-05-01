@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/caridadrivera/nodeLogin#readme",
   "dependencies": {
+    "bcrypt": "^4.0.1",
     "ejs": "^3.1.2",
     "express": "^4.17.1"
   },
