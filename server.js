@@ -1,6 +1,21 @@
+if(process.env.NODE_ENV !== 'production') {
+//this will log in all of our environment variables and set them inside process.env
+    require('dotenv').config()
+}
+
+
 const express = require('express');
 const app = express()
 const bcrypt = require('bcrypt')
+const passport  = require('passport')
+const flash = require('express-flash')
+const session = require('express-session')
+
+const initializePassport = require('/passport-config')
+initializePassport(
+    passport, 
+    email => users.find(user => user.email === email)
+)
 
 //for the sake of simplicity. not connecting to db. using a users array to populate
 const users = []
@@ -9,6 +24,17 @@ const users = []
 app.set('view-engine', 'ejs')
 //telling our app to take the forms in html to make them available inside of our routes
 app.use(express.urlencoded({extended: false}))
+app.user(flash())
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false
+}))
+//initialize function inside of passport that sets up basic functionality.
+app.use(passport.initialize())
+//this one persists all variables across all the sessions of a user
+app.use(passport.session())
+
 
 app.get('/', (req, res) => {
     res.render('index.ejs', {name: "Kyle"})
@@ -18,9 +44,13 @@ app.get('/login', (req, res) =>{
     res.render('login.ejs')
 })
 
-app.get('/login', (req, res)=>{
-
-})
+/* I use the passport.authenticate middleware, pass the the local strategy and list
+a number of things we want to modify at login */
+app.get('/login', passport.authenticate('local', {
+ successRedirect: '/',
+ failureRedirect: '/login',
+ failureFlash: true
+}))
 
 app.get('/register', (req, res) =>{
     res.render('register.ejs')
@@ -44,8 +74,10 @@ app.post('/register', async (req, res) =>{
     //if anything fails, redirect them back to register
         res.redirect('/register')
     }
-    console.log(users)
 })
+
+
+
 
 
 app.listen(3000)
